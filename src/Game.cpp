@@ -41,14 +41,13 @@ void Game::init(int paramSample)
     // camera.setPosition(vec3(0, 1, 0));
     // camera.setDirection(vec3(1, 0, 0));
     auto myfile = std::fstream("saves/cameraState.bin", std::ios::in | std::ios::binary);
-    if(myfile)
+    if (myfile)
     {
         CameraState buff;
-        myfile.read((char*)&buff, sizeof(CameraState));
+        myfile.read((char *)&buff, sizeof(CameraState));
         myfile.close();
         camera.setState(buff);
     }
-
 
     /* Loading 3D Materials */
     depthOnlyMaterial = MeshMaterial(
@@ -171,11 +170,11 @@ bool Game::userInput(GLFWKeyInfo input)
             break;
 
         case GLFW_KEY_F5:
-            #ifdef _WIN32
+#ifdef _WIN32
             system("cls");
-            #else
+#else
             system("clear");
-            #endif
+#endif
 
             finalProcessingStage.reset();
             Bloom.getShader().reset();
@@ -185,27 +184,27 @@ bool Game::userInput(GLFWKeyInfo input)
             GameGlobals::PBRinstanced->reset();
             GameGlobals::PBRstencil->reset();
             GameGlobals::PBRanimated->reset();
-            
+
             GameGlobals::PBRinstanced.depthOnly->reset();
             GameGlobals::PBRstencil.depthOnly->reset();
             GameGlobals::PBRanimated.depthOnly->reset();
             skyboxMaterial->reset();
             break;
-        
+
         case GLFW_KEY_F6:
-            if(helpers->state.hide == ModelStateHideStatus::SHOW)
+            if (helpers->state.hide == ModelStateHideStatus::SHOW)
                 helpers->state.hide = ModelStateHideStatus::HIDE;
             else
                 helpers->state.hide = ModelStateHideStatus::SHOW;
             break;
 
         case GLFW_KEY_F8:
-            {
-                auto myfile = std::fstream("saves/cameraState.bin", std::ios::out | std::ios::binary);
-                myfile.write((char*)&camera.getState(), sizeof(CameraState));
-                myfile.close();
-            }
-                break;
+        {
+            auto myfile = std::fstream("saves/cameraState.bin", std::ios::out | std::ios::binary);
+            myfile.write((char *)&camera.getState(), sizeof(CameraState));
+            myfile.close();
+        }
+        break;
 
         default:
             break;
@@ -315,19 +314,19 @@ void Game::mainloop()
     ObjectGroupRef lights = newObjectGroup();
     helpers = newObjectGroup();
     int nbLights = 0;
-    for(int i = 0; i < nbLights; i++)
+    for (int i = 0; i < nbLights; i++)
     {
         ScenePointLight l = newPointLight();
 
-        float phi = (float)(std::rand()%3141592)/(PI);
+        float phi = (float)(std::rand() % 3141592) / (PI);
         const float maxDist = 300.f;
-        float dist = (float)(std::rand()%(int)1e5)/1e5f;
-        dist = pow(dist, 0.5f)*maxDist;
+        float dist = (float)(std::rand() % (int)1e5) / 1e5f;
+        dist = pow(dist, 0.5f) * maxDist;
 
         l->setIntensity(5.f)
             .setRadius(10.0)
-            .setColor(hsv2rgb(vec3((float)(std::rand()%256)/256.f, 1.0, 1.f)))
-            .setPosition(dist*PhiThetaToDir(vec2(phi, 0)) + vec3(0, l->radius()*0.25, 0));
+            .setColor(hsv2rgb(vec3((float)(std::rand() % 256) / 256.f, 1.0, 1.f)))
+            .setPosition(dist * PhiThetaToDir(vec2(phi, 0)) + vec3(0, l->radius() * 0.25, 0));
 
         lights->add(l);
         helpers->add(PointLightHelperRef(new PointLightHelper(l)));
@@ -343,7 +342,6 @@ void Game::mainloop()
     // ));
 
     scene.activateClusteredLighting();
-
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
@@ -381,21 +379,21 @@ void Game::mainloop()
     testmodel->state.scaleScalar(1);
     scene.add(testmodel);
 
-
     SkeletonRef humanSkeleton(new Skeleton);
     humanSkeleton->load("ressources/models/animations/human.vulpineSkeleton");
 
     SkeletonAnimationState dummyState;
     dummyState.skeleton = humanSkeleton;
-    for(int i = 0; i < humanSkeleton->getSize(); i++) dummyState.push_back(mat4(1));
+    for (int i = 0; i < humanSkeleton->getSize(); i++)
+        dummyState.push_back(mat4(1));
     humanSkeleton->applyGraph(dummyState);
     dummyState.send();
 
     SkeletonAnimationState defaultState;
-    for(int i = 0; i < humanSkeleton->getSize(); i++) defaultState.push_back(mat4(1));
+    for (int i = 0; i < humanSkeleton->getSize(); i++)
+        defaultState.push_back(mat4(1));
     humanSkeleton->applyGraph(defaultState);
     defaultState.send();
-
 
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
     scene.add(animHelper);
@@ -405,7 +403,8 @@ void Game::mainloop()
     {
         mainloopStartRoutine();
 
-        for (GLFWKeyInfo input; inputs.pull(input); userInput(input));
+        for (GLFWKeyInfo input; inputs.pull(input); userInput(input))
+            ;
 
         menu.trackCursor();
         menu.updateText();
@@ -413,17 +412,18 @@ void Game::mainloop()
         mainloopPreRenderRoutine();
 
         float time = globals.simulationTime.getElapsedTime();
-        lights->state.setRotation(vec3(0, time*0.25, 0));
+        lights->state.setRotation(vec3(0, time * 0.25, 0));
 
-
-        for(int i = 0; i < humanSkeleton->getSize(); i++) dummyState[i] = mat4(1);
+        for (int i = 0; i < humanSkeleton->getSize(); i++)
+            dummyState[i] = mat4(1);
         ModelState3D dummyBone;
         // dummyBone.setPosition(vec3(0, 1.0 + cos(time), 0));
-        dummyBone.setRotation(vec3(0.5*cos(time), 0, 0));
+        dummyBone.setRotation(vec3(0.5 * cos(time), 0, 0));
         dummyBone.update();
         // id 12 : left shoulder
         dummyState[12] = dummyBone.modelMatrix;
-        for(int i = 2; i < humanSkeleton->getSize(); i++) dummyState[i] = dummyBone.modelMatrix;
+        for (int i = 0; i < humanSkeleton->getSize(); i++)
+            dummyState[i] = dummyBone.modelMatrix;
         humanSkeleton->applyGraph(dummyState);
 
         dummyState.update();
@@ -452,9 +452,7 @@ void Game::mainloop()
         scene.generateShadowMaps();
         renderBuffer.activate();
 
-        
         scene.cull();
-        
 
         /* 3D Early Depth Testing */
         scene.depthOnlyDraw(*globals.currentCamera, true);
