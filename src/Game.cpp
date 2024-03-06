@@ -1,4 +1,4 @@
-#include <Game.hpp>
+#include "Game.hpp"
 #include <../Engine/include/Globals.hpp>
 #include <GameObject.hpp>
 #include <CompilingOptions.hpp>
@@ -12,6 +12,7 @@
 #include <Helpers.hpp>
 #include <VulpineAssets.hpp>
 #include <Skeleton.hpp>
+#include <Animation.hpp>
 
 Game::Game(GLFWwindow *window) : App(window) {}
 
@@ -380,7 +381,7 @@ void Game::mainloop()
     scene.add(testmodel);
 
     SkeletonRef humanSkeleton(new Skeleton);
-    humanSkeleton->load("ressources/models/animations/human.vulpineSkeleton");
+    humanSkeleton->load("ressources/models/animations/Female_Walk_binSkeleton.vulpineSkeleton");
 
     SkeletonAnimationState dummyState;
     dummyState.skeleton = humanSkeleton;
@@ -398,6 +399,8 @@ void Game::mainloop()
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
     scene.add(animHelper);
 
+    AnimationRef walkAnim = Animation::load("ressources/models/animations/Female_Walk_bin_Armature.vulpineAnimation");
+
     /* Main Loop */
     while (state != AppState::quit)
     {
@@ -414,16 +417,19 @@ void Game::mainloop()
         float time = globals.simulationTime.getElapsedTime();
         lights->state.setRotation(vec3(0, time * 0.25, 0));
 
-        for (int i = 0; i < humanSkeleton->getSize(); i++)
-            dummyState[i] = mat4(1);
-        ModelState3D dummyBone;
-        // dummyBone.setPosition(vec3(0, 1.0 + cos(time), 0));
-        dummyBone.setRotation(vec3(0.5 * cos(time), 0, 0));
-        dummyBone.update();
+        // for (int i = 0; i < humanSkeleton->getSize(); i++)
+        //     dummyState[i] = mat4(1);
+        // ModelState3D dummyBone;
+        // // dummyBone.setPosition(vec3(0, 1.0 + cos(time), 0));
+        // dummyBone.setRotation(vec3(0.5 * cos(time), 0, 0));
+        // dummyBone.update();
         // id 12 : left shoulder
-        dummyState[12] = dummyBone.modelMatrix;
-        for (int i = 0; i < humanSkeleton->getSize(); i++)
-            dummyState[i] = dummyBone.modelMatrix;
+        // dummyState[12] = dummyBone.modelMatrix;
+        // for (int i = 0; i < humanSkeleton->getSize(); i++)
+        //     dummyState[i] = dummyBone.modelMatrix;
+
+        walkAnim->apply(time, dummyState);
+
         humanSkeleton->applyGraph(dummyState);
 
         dummyState.update();
