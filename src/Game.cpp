@@ -255,7 +255,7 @@ void Game::mainloop()
             ModelRef f = floor->copyWithSharedMesh();
             f->state
                 .setScale(vec3(gridScale, 0.25f, gridScale))
-                .setPosition(vec3(i * gridScale * 2.0, 0.0, j * gridScale * 2.0));
+                .setPosition(vec3(i * gridScale * 2.0, -0.35, j * gridScale * 2.0));
             scene.add(f);
         }
 
@@ -364,24 +364,29 @@ void Game::mainloop()
     BenchTimer cullTimer("Light Culling");
     cullTimer.setMenu(menu);
 
-    menu.batch();
-    scene2D.updateAllObjects();
-    fuiBatch->batch();
+
 
     state = AppState::run;
     std::thread physicsThreads(&Game::physicsLoop, this);
 
     glLineWidth(5.0);
 
-    MeshVao test = loadVulpineMesh("ressources/models/vulpineMesh/Beta_Surface.vulpineMesh");
-    ModelRef testmodel = newModel(GameGlobals::PBRanimated, test);
-    testmodel->setMap(Texture2D().loadFromFileKTX("ressources/models/vulpineMesh/CE.ktx"), 0);
-    testmodel->setMap(Texture2D().loadFromFileKTX("ressources/models/vulpineMesh/NRM.ktx"), 1);
-    testmodel->state.scaleScalar(1);
-    scene.add(testmodel);
+    MeshVao test = loadVulpineMesh("ressources/models/animations/Beta_Surface.vulpineMesh");
+
+    ModelRef animatedSurface = newModel(GameGlobals::PBRanimated, test);
+    animatedSurface->setMap(Texture2D().loadFromFileKTX("ressources/models/animations/CE.ktx"), 0);
+    animatedSurface->setMap(Texture2D().loadFromFileKTX("ressources/models/animations/NRM.ktx"), 1);
+    animatedSurface->state.scaleScalar(1);
+    ModelRef animatedJoints = animatedSurface->copyWithSharedMesh();
+    animatedJoints->setVao(loadVulpineMesh("ressources/models/animations/Beta_Joints.vulpineMesh"));
+    animatedJoints->setMap(Texture2D().loadFromFileKTX("ressources/models/ground/CE.ktx"), 0);
+    animatedJoints->setMap(Texture2D().loadFromFileKTX("ressources/models/ground/NRM.ktx"), 1);
+    scene.add(animatedSurface);
+    scene.add(animatedJoints);
 
     SkeletonRef humanSkeleton(new Skeleton);
-    humanSkeleton->load("ressources/models/animations/Female_Walk_binSkeleton.vulpineSkeleton");
+
+    humanSkeleton->load("ressources/models/animations/human.vulpineSkeleton");
 
     SkeletonAnimationState dummyState;
     dummyState.skeleton = humanSkeleton;
@@ -390,17 +395,22 @@ void Game::mainloop()
     humanSkeleton->applyGraph(dummyState);
     dummyState.send();
 
-    SkeletonAnimationState defaultState;
-    for (int i = 0; i < humanSkeleton->getSize(); i++)
-        defaultState.push_back(mat4(1));
-    humanSkeleton->applyGraph(defaultState);
-    defaultState.send();
-
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
     scene.add(animHelper);
 
-    AnimationRef walkAnim = Animation::load("ressources/models/animations/Female_Walk_bin_Armature.vulpineAnimation");
 
+    // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/angry.vulpineAnimation");
+    // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/Flair.vulpineAnimation");
+    AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/femaleWalk.vulpineAnimation");
+
+    animatedSurface->setMenu(menu, U"model");
+
+
+
+    menu.batch();
+    scene2D.updateAllObjects();
+    fuiBatch->batch();
+    
     /* Main Loop */
     while (state != AppState::quit)
     {
@@ -414,27 +424,30 @@ void Game::mainloop()
 
         mainloopPreRenderRoutine();
 
-        float time = globals.simulationTime.getElapsedTime();
+        float time = globals.appTime.getElapsedTime();
         lights->state.setRotation(vec3(0, time * 0.25, 0));
 
-        // for (int i = 0; i < humanSkeleton->getSize(); i++)
-        //     dummyState[i] = mat4(1);
+        for (int i = 0; i < humanSkeleton->getSize(); i++)
+            dummyState[i] = mat4(1);
+
+
         // ModelState3D dummyBone;
         // // dummyBone.setPosition(vec3(0, 1.0 + cos(time), 0));
         // dummyBone.setRotation(vec3(0.5 * cos(time), 0, 0));
         // dummyBone.update();
-        // id 12 : left shoulder
+        // // id 12 : left shoulder
         // dummyState[12] = dummyBone.modelMatrix;
-        // for (int i = 0; i < humanSkeleton->getSize(); i++)
+        // int min = 12;
+        // int max = 13;
+        // for (int i = min; i < max; i++)
         //     dummyState[i] = dummyBone.modelMatrix;
 
-        walkAnim->apply(time, dummyState);
-
+        
+        walkAnim->apply(time*20,dummyState);
         humanSkeleton->applyGraph(dummyState);
 
         dummyState.update();
         dummyState.activate(2);
-        defaultState.activate(3);
 
         /* UI & 2D Render */
         glEnable(GL_BLEND);
