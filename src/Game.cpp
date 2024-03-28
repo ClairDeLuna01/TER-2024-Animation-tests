@@ -364,8 +364,6 @@ void Game::mainloop()
     BenchTimer cullTimer("Light Culling");
     cullTimer.setMenu(menu);
 
-
-
     state = AppState::run;
     std::thread physicsThreads(&Game::physicsLoop, this);
 
@@ -398,19 +396,21 @@ void Game::mainloop()
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
     scene.add(animHelper);
 
-
     // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/angry.vulpineAnimation");
     // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/Flair.vulpineAnimation");
-    AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/femaleWalk.vulpineAnimation");
+    AnimationRef danceAnim = Animation::load(humanSkeleton, "ressources/models/animations/Hip Hop Dancing_mixamo.com.vulpineAnimation");
+    AnimationRef rollAnim2 = Animation::load(humanSkeleton, "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
+
+    std::vector<std::pair<AnimationRef, float>> animations;
+    animations.push_back({danceAnim, 1.0});
+    animations.push_back({rollAnim2, 0.5});
 
     animatedSurface->setMenu(menu, U"model");
-
-
 
     menu.batch();
     scene2D.updateAllObjects();
     fuiBatch->batch();
-    
+
     /* Main Loop */
     while (state != AppState::quit)
     {
@@ -430,7 +430,6 @@ void Game::mainloop()
         for (int i = 0; i < humanSkeleton->getSize(); i++)
             dummyState[i] = mat4(1);
 
-
         // ModelState3D dummyBone;
         // // dummyBone.setPosition(vec3(0, 1.0 + cos(time), 0));
         // dummyBone.setRotation(vec3(0.5 * cos(time), 0, 0));
@@ -442,8 +441,7 @@ void Game::mainloop()
         // for (int i = min; i < max; i++)
         //     dummyState[i] = dummyBone.modelMatrix;
 
-        
-        walkAnim->apply(time*20,dummyState);
+        dummyState.applyAnimations(time, animations);
         humanSkeleton->applyGraph(dummyState);
 
         dummyState.update();
