@@ -4,6 +4,8 @@
 #include <Fonts.hpp>
 #include <FastUI.hpp>
 
+#include <Physics.hpp>
+
 #include <GameGlobals.hpp>
 class Game final : public App
 {
@@ -16,7 +18,7 @@ private:
     MeshMaterial depthOnlyInstancedMaterial;
 
     /* Fast-UI */
-    FontRef FUIfont;    
+    FontRef FUIfont;
     MeshMaterial defaultFontMaterial;
     MeshMaterial defaultSUIMaterial;
     SimpleUiTileBatchRef fuiBatch;

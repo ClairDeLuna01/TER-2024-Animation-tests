@@ -225,9 +225,11 @@ void Game::physicsLoop()
     {
         physicsTicks.start();
 
-        physicsMutex.lock();
-        physicsEngine.update(1.f / physicsTicks.freq);
-        physicsMutex.unlock();
+        // physicsMutex.lock();
+        // physicsEngine.update(1.f / physicsTicks.freq);
+        // physicsMutex.unlock();
+
+        physicsEngine.tick(1.f / physicsTicks.freq);
 
         physicsTicks.waitForEnd();
     }
@@ -385,7 +387,7 @@ void Game::mainloop()
 
     SkeletonRef humanSkeleton(new Skeleton);
 
-    humanSkeleton->load("ressources/models/animations/human.vulpineSkeleton");
+    humanSkeleton->load("ressources/models/animations/IdleSkeleton.vulpineSkeleton");
 
     SkeletonAnimationState dummyState;
     dummyState.skeleton = humanSkeleton;
@@ -397,22 +399,51 @@ void Game::mainloop()
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
     scene.add(animHelper);
 
-    AnimationRef walkAnim = Animation::load("ressources/models/animations/Idle_mixamo.com.vulpineAnimation");
-    // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/Flair.vulpineAnimation");
-    AnimationRef danceAnim = Animation::load("ressources/models/animations/Jogging_mixamo.com.vulpineAnimation");
+    AnimationRef idleAnim = Animation::load("ressources/models/animations/Idle_mixamo.com.vulpineAnimation");
+    AnimationRef jogAnim = Animation::load("ressources/models/animations/Jogging_mixamo.com.vulpineAnimation");
+    AnimationRef kickAnim = Animation::load("ressources/models/animations/Mma Kick_mixamo.com.vulpineAnimation");
 
     // AnimationRef rollAnim2 = Animation::load(humanSkeleton, "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
 
     // std::vector<std::pair<AnimationRef, float>> animations;
-    // animations.push_back({danceAnim, 1.0});
-    // animations.push_back({rollAnim2, 0.5});
+    // animations.push_back({jogAnim, 1.0});
+    // animations.push_back({jogAnim, 0.5});
 
-    std::vector<AnimationControllerTransition> transitions = {
-        AnimationControllerTransition(walkAnim, danceAnim, COND_ANIMATION_FINISHED, walkAnim->getLength() * 0.9f, walkAnim->getLength() * 0.1f),
-        // AnimationControllerTransition(danceAnim, walkAnim, COND_ANIMATION_FINISHED, danceAnim->getLength() * 0.9f, danceAnim->getLength() * 0.1f),
+    bool isJogging = false;
+    bool *isJoggingPtr = &isJogging;
+
+    bool kick = false;
+    bool *kickPtr = &kick;
+
+    std::function<bool()> condEnterJog = [isJoggingPtr]
+    {
+        return *isJoggingPtr;
     };
 
-    std::vector<AnimationRef> animations = {walkAnim, danceAnim};
+    std::function<bool()> condExitJog = [isJoggingPtr]
+    {
+        return !(*isJoggingPtr);
+    };
+
+    std::function<bool()> condKick = [kickPtr]
+    {
+        if (*kickPtr)
+        {
+            *kickPtr = false;
+            return true;
+        }
+        return false;
+    };
+
+    std::vector<AnimationControllerTransition> transitions = {
+        AnimationControllerTransition(idleAnim, jogAnim, COND_CUSTOM, idleAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condEnterJog),
+        AnimationControllerTransition(jogAnim, idleAnim, COND_CUSTOM, jogAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condExitJog),
+        AnimationControllerTransition(idleAnim, kickAnim, COND_CUSTOM, idleAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condKick),
+        AnimationControllerTransition(jogAnim, kickAnim, COND_CUSTOM, jogAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condKick),
+        AnimationControllerTransition(kickAnim, idleAnim, COND_ANIMATION_FINISHED, kickAnim->getLength() * 0.2f, TRANSITION_SMOOTH),
+    };
+
+    std::vector<AnimationRef> animations = {idleAnim, jogAnim};
 
     AnimationController controller(0, transitions, animations);
 
@@ -453,15 +484,23 @@ void Game::mainloop()
         //     dummyState[i] = dummyBone.modelMatrix;
 
         // dummyState.applyAnimations(time, animations);
-        // humanSkeleton->applyGraph(dummyState);
 
-        // controller.update();
-        // controller.applyKeyframes(dummyState);
+        // bad but whatver it's just a demo
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            isJogging = true;
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            isJogging = false;
 
-        auto frames = walkAnim->getCurrentFrames(time);
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+            kick = true;
 
-        dummyState.applyKeyframes(frames);
+        controller.update();
+        controller.applyKeyframes(dummyState);
 
+        // auto frames = idleAnim->getCurrentFrames(time);
+        // dummyState.applyKeyframes(frames);
+
+        humanSkeleton->applyGraph(dummyState);
         dummyState.update();
         dummyState.activate(2);
 
