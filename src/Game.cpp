@@ -13,6 +13,7 @@
 #include <VulpineAssets.hpp>
 #include <Skeleton.hpp>
 #include <Animation.hpp>
+#include <AnimationController.hpp>
 
 Game::Game(GLFWwindow *window) : App(window) {}
 
@@ -396,14 +397,24 @@ void Game::mainloop()
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
     scene.add(animHelper);
 
-    // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/angry.vulpineAnimation");
+    AnimationRef walkAnim = Animation::load("ressources/models/animations/Idle_mixamo.com.vulpineAnimation");
     // AnimationRef walkAnim = Animation::load(humanSkeleton, "ressources/models/animations/Flair.vulpineAnimation");
-    AnimationRef danceAnim = Animation::load(humanSkeleton, "ressources/models/animations/Hip Hop Dancing_mixamo.com.vulpineAnimation");
-    AnimationRef rollAnim2 = Animation::load(humanSkeleton, "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
+    AnimationRef danceAnim = Animation::load("ressources/models/animations/Jogging_mixamo.com.vulpineAnimation");
 
-    std::vector<std::pair<AnimationRef, float>> animations;
-    animations.push_back({danceAnim, 1.0});
-    animations.push_back({rollAnim2, 0.5});
+    // AnimationRef rollAnim2 = Animation::load(humanSkeleton, "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
+
+    // std::vector<std::pair<AnimationRef, float>> animations;
+    // animations.push_back({danceAnim, 1.0});
+    // animations.push_back({rollAnim2, 0.5});
+
+    std::vector<AnimationControllerTransition> transitions = {
+        AnimationControllerTransition(walkAnim, danceAnim, COND_ANIMATION_FINISHED, walkAnim->getLength() * 0.9f, walkAnim->getLength() * 0.1f),
+        // AnimationControllerTransition(danceAnim, walkAnim, COND_ANIMATION_FINISHED, danceAnim->getLength() * 0.9f, danceAnim->getLength() * 0.1f),
+    };
+
+    std::vector<AnimationRef> animations = {walkAnim, danceAnim};
+
+    AnimationController controller(0, transitions, animations);
 
     animatedSurface->setMenu(menu, U"model");
 
@@ -441,8 +452,15 @@ void Game::mainloop()
         // for (int i = min; i < max; i++)
         //     dummyState[i] = dummyBone.modelMatrix;
 
-        dummyState.applyAnimations(time, animations);
-        humanSkeleton->applyGraph(dummyState);
+        // dummyState.applyAnimations(time, animations);
+        // humanSkeleton->applyGraph(dummyState);
+
+        // controller.update();
+        // controller.applyKeyframes(dummyState);
+
+        auto frames = walkAnim->getCurrentFrames(time);
+
+        dummyState.applyKeyframes(frames);
 
         dummyState.update();
         dummyState.activate(2);
