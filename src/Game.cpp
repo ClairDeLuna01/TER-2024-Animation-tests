@@ -1,21 +1,23 @@
 #include "Game.hpp"
 #include <../Engine/include/Globals.hpp>
-#include <GameObject.hpp>
-#include <CompilingOptions.hpp>
-#include <MathsUtils.hpp>
 #include <Audio.hpp>
+#include <CompilingOptions.hpp>
 #include <Constants.hpp>
+#include <GameObject.hpp>
+#include <MathsUtils.hpp>
 
-#include <thread>
 #include <fstream>
+#include <thread>
 
-#include <Helpers.hpp>
-#include <VulpineAssets.hpp>
-#include <Skeleton.hpp>
 #include <Animation.hpp>
 #include <AnimationController.hpp>
+#include <Helpers.hpp>
+#include <Skeleton.hpp>
+#include <VulpineAssets.hpp>
 
-Game::Game(GLFWwindow *window) : App(window) {}
+Game::Game(GLFWwindow *window) : App(window)
+{
+}
 
 void Game::init(int paramSample)
 {
@@ -30,11 +32,8 @@ void Game::init(int paramSample)
 
     ambientLight = vec3(0.1);
 
-    finalProcessingStage = ShaderProgram(
-        "shader/post-process/final composing.frag",
-        "shader/post-process/basic.vert",
-        "",
-        globals.standartShaderUniform2D());
+    finalProcessingStage = ShaderProgram("shader/post-process/final composing.frag", "shader/post-process/basic.vert",
+                                         "", globals.standartShaderUniform2D());
 
     finalProcessingStage.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
 
@@ -52,65 +51,33 @@ void Game::init(int paramSample)
     }
 
     /* Loading 3D Materials */
-    depthOnlyMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/depthOnly.frag",
-            "shader/foward/basic.vert",
-            ""));
+    depthOnlyMaterial = MeshMaterial(new ShaderProgram("shader/depthOnly.frag", "shader/foward/basic.vert", ""));
 
-    depthOnlyStencilMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/depthOnlyStencil.frag",
-            "shader/foward/basic.vert",
-            ""));
+    depthOnlyStencilMaterial =
+        MeshMaterial(new ShaderProgram("shader/depthOnlyStencil.frag", "shader/foward/basic.vert", ""));
 
-    depthOnlyInstancedMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/depthOnlyStencil.frag",
-            "shader/foward/basicInstance.vert",
-            ""));
+    depthOnlyInstancedMaterial =
+        MeshMaterial(new ShaderProgram("shader/depthOnlyStencil.frag", "shader/foward/basicInstance.vert", ""));
 
-    depthOnlyAnimatedMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/depthOnlyStencil.frag",
-            "shader/animation/animated.vert",
-            ""));
+    depthOnlyAnimatedMaterial =
+        MeshMaterial(new ShaderProgram("shader/depthOnlyStencil.frag", "shader/animation/animated.vert", ""));
 
-    GameGlobals::PBR = MeshMaterial(
-        new ShaderProgram(
-            "shader/foward/PBR.frag",
-            // "shader/clustered/clusterDebug.frag",
-            "shader/foward/basic.vert",
-            "",
-            globals.standartShaderUniform3D()));
+    GameGlobals::PBR =
+        MeshMaterial(new ShaderProgram("shader/foward/PBR.frag",
+                                       // "shader/clustered/clusterDebug.frag",
+                                       "shader/foward/basic.vert", "", globals.standartShaderUniform3D()));
 
     GameGlobals::PBRstencil = MeshMaterial(
-        new ShaderProgram(
-            "shader/foward/PBR.frag",
-            "shader/foward/basic.vert",
-            "",
-            globals.standartShaderUniform3D()));
+        new ShaderProgram("shader/foward/PBR.frag", "shader/foward/basic.vert", "", globals.standartShaderUniform3D()));
 
-    GameGlobals::PBRinstanced = MeshMaterial(
-        new ShaderProgram(
-            "shader/foward/PBR.frag",
-            "shader/foward/basicInstance.vert",
-            "",
-            globals.standartShaderUniform3D()));
+    GameGlobals::PBRinstanced = MeshMaterial(new ShaderProgram(
+        "shader/foward/PBR.frag", "shader/foward/basicInstance.vert", "", globals.standartShaderUniform3D()));
 
-    GameGlobals::PBRanimated = MeshMaterial(
-        new ShaderProgram(
-            "shader/foward/PBR.frag",
-            "shader/animation/animated.vert",
-            "",
-            globals.standartShaderUniform3D()));
+    GameGlobals::PBRanimated = MeshMaterial(new ShaderProgram(
+        "shader/foward/PBR.frag", "shader/animation/animated.vert", "", globals.standartShaderUniform3D()));
 
-    skyboxMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/foward/Skybox.frag",
-            "shader/foward/basic.vert",
-            "",
-            globals.standartShaderUniform3D()));
+    skyboxMaterial = MeshMaterial(new ShaderProgram("shader/foward/Skybox.frag", "shader/foward/basic.vert", "",
+                                                    globals.standartShaderUniform3D()));
 
     GameGlobals::PBRstencil.depthOnly = depthOnlyStencilMaterial;
     GameGlobals::PBRanimated.depthOnly = depthOnlyAnimatedMaterial;
@@ -122,18 +89,10 @@ void Game::init(int paramSample)
     FUIfont->readCSV("ressources/fonts/Roboto/out.csv");
     FUIfont->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/Roboto/out.ktx"));
     defaultFontMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/2D/sprite.frag",
-            "shader/2D/sprite.vert",
-            "",
-            globals.standartShaderUniform2D()));
+        new ShaderProgram("shader/2D/sprite.frag", "shader/2D/sprite.vert", "", globals.standartShaderUniform2D()));
 
     defaultSUIMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/2D/fastui.frag",
-            "shader/2D/fastui.vert",
-            "",
-            globals.standartShaderUniform2D()));
+        new ShaderProgram("shader/2D/fastui.frag", "shader/2D/fastui.vert", "", globals.standartShaderUniform2D()));
 
     fuiBatch = SimpleUiTileBatchRef(new SimpleUiTileBatch);
     fuiBatch->setMaterial(defaultSUIMaterial);
@@ -200,8 +159,7 @@ bool Game::userInput(GLFWKeyInfo input)
                 helpers->state.hide = ModelStateHideStatus::SHOW;
             break;
 
-        case GLFW_KEY_F8:
-        {
+        case GLFW_KEY_F8: {
             auto myfile = std::fstream("saves/cameraState.bin", std::ios::out | std::ios::binary);
             myfile.write((char *)&camera.getState(), sizeof(CameraState));
             myfile.close();
@@ -256,8 +214,7 @@ void Game::mainloop()
         for (int j = -gridSize; j <= gridSize; j++)
         {
             ModelRef f = floor->copyWithSharedMesh();
-            f->state
-                .setScale(vec3(gridScale, 0.25f, gridScale))
+            f->state.setScale(vec3(gridScale, 0.25f, gridScale))
                 .setPosition(vec3(i * gridScale * 2.0, -0.35, j * gridScale * 2.0));
             scene.add(f);
         }
@@ -304,11 +261,10 @@ void Game::mainloop()
     // trunk->updateInstances();
     // scene.add(trunk);
 
-    SceneDirectionalLight sun = newDirectionLight(
-        DirectionLight()
-            .setColor(vec3(143, 107, 71) / vec3(255))
-            .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
-            .setIntensity(1.0));
+    SceneDirectionalLight sun = newDirectionLight(DirectionLight()
+                                                      .setColor(vec3(143, 107, 71) / vec3(255))
+                                                      .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
+                                                      .setIntensity(1.0));
 
     sun->cameraResolution = vec2(2048);
     sun->shadowCameraSize = vec2(90, 90);
@@ -403,7 +359,12 @@ void Game::mainloop()
     AnimationRef jogAnim = Animation::load("ressources/models/animations/Jogging_mixamo.com.vulpineAnimation");
     AnimationRef kickAnim = Animation::load("ressources/models/animations/Mma Kick_mixamo.com.vulpineAnimation");
 
-    // AnimationRef rollAnim2 = Animation::load(humanSkeleton, "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
+    kickAnim->onEnterAnimation = [] { std::cout << "kick entered\n"; };
+
+    kickAnim->onExitAnimation = [] { std::cout << "kick exited\n"; };
+
+    // AnimationRef rollAnim2 = Animation::load(humanSkeleton,
+    // "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
 
     // std::vector<std::pair<AnimationRef, float>> animations;
     // animations.push_back({jogAnim, 1.0});
@@ -415,18 +376,11 @@ void Game::mainloop()
     bool kick = false;
     bool *kickPtr = &kick;
 
-    std::function<bool()> condEnterJog = [isJoggingPtr]
-    {
-        return *isJoggingPtr;
-    };
+    std::function<bool()> condEnterJog = [isJoggingPtr] { return *isJoggingPtr; };
 
-    std::function<bool()> condExitJog = [isJoggingPtr]
-    {
-        return !(*isJoggingPtr);
-    };
+    std::function<bool()> condExitJog = [isJoggingPtr] { return !(*isJoggingPtr); };
 
-    std::function<bool()> condKick = [kickPtr]
-    {
+    std::function<bool()> condKick = [kickPtr] {
         if (*kickPtr)
         {
             *kickPtr = false;
@@ -435,12 +389,21 @@ void Game::mainloop()
         return false;
     };
 
+    std::function<float()> kickSpeed = [] { return (cos(globals.appTime.getElapsedTime() * 5) + 1) * 0.5f; };
+
+    kickAnim->speedCallback = kickSpeed;
+
     std::vector<AnimationControllerTransition> transitions = {
-        AnimationControllerTransition(idleAnim, jogAnim, COND_CUSTOM, idleAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condEnterJog),
-        AnimationControllerTransition(jogAnim, idleAnim, COND_CUSTOM, jogAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condExitJog),
-        AnimationControllerTransition(idleAnim, kickAnim, COND_CUSTOM, idleAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condKick),
-        AnimationControllerTransition(jogAnim, kickAnim, COND_CUSTOM, jogAnim->getLength() * 0.2f, TRANSITION_SMOOTH, condKick),
-        AnimationControllerTransition(kickAnim, idleAnim, COND_ANIMATION_FINISHED, kickAnim->getLength() * 0.2f, TRANSITION_SMOOTH),
+        AnimationControllerTransition(idleAnim, jogAnim, COND_CUSTOM, idleAnim->getLength() * 0.2f, TRANSITION_SMOOTH,
+                                      condEnterJog),
+        AnimationControllerTransition(jogAnim, idleAnim, COND_CUSTOM, jogAnim->getLength() * 0.2f, TRANSITION_SMOOTH,
+                                      condExitJog),
+        AnimationControllerTransition(idleAnim, kickAnim, COND_CUSTOM, idleAnim->getLength() * 0.2f, TRANSITION_SMOOTH,
+                                      condKick),
+        AnimationControllerTransition(jogAnim, kickAnim, COND_CUSTOM, jogAnim->getLength() * 0.2f, TRANSITION_SMOOTH,
+                                      condKick),
+        AnimationControllerTransition(kickAnim, idleAnim, COND_ANIMATION_FINISHED, kickAnim->getLength() * 0.2f,
+                                      TRANSITION_SMOOTH),
     };
 
     std::vector<AnimationRef> animations = {idleAnim, jogAnim};
@@ -494,7 +457,7 @@ void Game::mainloop()
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
             kick = true;
 
-        controller.update();
+        controller.update(globals.appTime.getDelta());
         controller.applyKeyframes(dummyState);
 
         // auto frames = idleAnim->getCurrentFrames(time);
