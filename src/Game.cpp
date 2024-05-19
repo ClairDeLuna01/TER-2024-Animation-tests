@@ -338,8 +338,8 @@ void Game::mainloop()
     animatedJoints->setVao(loadVulpineMesh("ressources/models/animations/Beta_Joints.vulpineMesh"));
     animatedJoints->setMap(Texture2D().loadFromFileKTX("ressources/models/ground/CE.ktx"), 0);
     animatedJoints->setMap(Texture2D().loadFromFileKTX("ressources/models/ground/NRM.ktx"), 1);
-    scene.add(animatedSurface);
-    scene.add(animatedJoints);
+    // scene.add(animatedSurface);
+    // scene.add(animatedJoints);
 
     SkeletonRef humanSkeleton(new Skeleton);
 
@@ -389,7 +389,7 @@ void Game::mainloop()
         return false;
     };
 
-    std::function<float()> kickSpeed = [] { return (cos(globals.appTime.getElapsedTime() * 5) + 1) * 0.5f; };
+    std::function<float()> kickSpeed = [] { return 1.0; };
 
     kickAnim->speedCallback = kickSpeed;
 
@@ -410,7 +410,16 @@ void Game::mainloop()
 
     AnimationController controller(0, transitions, animations);
 
-    animatedSurface->setMenu(menu, U"model");
+    ObjectGroupRef human = newObjectGroup();
+    human->add(animatedSurface);
+    human->add(animatedJoints);
+    human->setAnimation(&dummyState);
+
+    human->state.setPosition(vec3(0, 0, 0));
+    human->state.scaleScalar(1.0);
+    scene.add(human);
+
+    human->setMenu(menu, U"Human");
 
     menu.batch();
     scene2D.updateAllObjects();
@@ -464,8 +473,9 @@ void Game::mainloop()
         // dummyState.applyKeyframes(frames);
 
         humanSkeleton->applyGraph(dummyState);
+
         dummyState.update();
-        dummyState.activate(2);
+        // dummyState.activate(2);
 
         /* UI & 2D Render */
         glEnable(GL_BLEND);
