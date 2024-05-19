@@ -215,7 +215,7 @@ void Game::mainloop()
         {
             ModelRef f = floor->copyWithSharedMesh();
             f->state.setScale(vec3(gridScale, 0.25f, gridScale))
-                .setPosition(vec3(i * gridScale * 2.0, -0.35, j * gridScale * 2.0));
+                .setPosition(vec3(i * gridScale * 2.0, -0.32, j * gridScale * 2.0));
             scene.add(f);
         }
 
@@ -267,7 +267,7 @@ void Game::mainloop()
                                                       .setIntensity(1.0));
 
     sun->cameraResolution = vec2(2048);
-    sun->shadowCameraSize = vec2(90, 90);
+    sun->shadowCameraSize = vec2(15, 15);
     sun->activateShadows();
     scene.add(sun);
 
@@ -338,18 +338,12 @@ void Game::mainloop()
     animatedJoints->setVao(loadVulpineMesh("ressources/models/animations/Beta_Joints.vulpineMesh"));
     animatedJoints->setMap(Texture2D().loadFromFileKTX("ressources/models/ground/CE.ktx"), 0);
     animatedJoints->setMap(Texture2D().loadFromFileKTX("ressources/models/ground/NRM.ktx"), 1);
-    // scene.add(animatedSurface);
-    // scene.add(animatedJoints);
 
     SkeletonRef humanSkeleton(new Skeleton);
 
     humanSkeleton->load("ressources/models/animations/IdleSkeleton.vulpineSkeleton");
 
-    SkeletonAnimationState dummyState;
-    dummyState.skeleton = humanSkeleton;
-    for (int i = 0; i < humanSkeleton->getSize(); i++)
-        dummyState.push_back(mat4(1));
-    humanSkeleton->applyGraph(dummyState);
+    SkeletonAnimationState dummyState(humanSkeleton);
     dummyState.send();
 
     SkeletonHelperRef animHelper(new SkeletonHelper(dummyState));
@@ -363,12 +357,6 @@ void Game::mainloop()
 
     kickAnim->onExitAnimation = [] { std::cout << "kick exited\n"; };
 
-    // AnimationRef rollAnim2 = Animation::load(humanSkeleton,
-    // "ressources/models/animations/Running_mixamo.com.vulpineAnimation");
-
-    // std::vector<std::pair<AnimationRef, float>> animations;
-    // animations.push_back({jogAnim, 1.0});
-    // animations.push_back({jogAnim, 0.5});
 
     bool isJogging = false;
     bool *isJoggingPtr = &isJogging;
@@ -415,7 +403,7 @@ void Game::mainloop()
     human->add(animatedJoints);
     human->setAnimation(&dummyState);
 
-    human->state.setPosition(vec3(0, 0, 0));
+    human->state.setPosition(vec3(1.5, 0, 0));
     human->state.scaleScalar(1.0);
     scene.add(human);
 
@@ -424,6 +412,8 @@ void Game::mainloop()
     menu.batch();
     scene2D.updateAllObjects();
     fuiBatch->batch();
+
+    SSAO.toggle();
 
     /* Main Loop */
     while (state != AppState::quit)
@@ -438,25 +428,6 @@ void Game::mainloop()
 
         mainloopPreRenderRoutine();
 
-        float time = globals.appTime.getElapsedTime();
-        lights->state.setRotation(vec3(0, time * 0.25, 0));
-
-        for (int i = 0; i < humanSkeleton->getSize(); i++)
-            dummyState[i] = mat4(1);
-
-        // ModelState3D dummyBone;
-        // // dummyBone.setPosition(vec3(0, 1.0 + cos(time), 0));
-        // dummyBone.setRotation(vec3(0.5 * cos(time), 0, 0));
-        // dummyBone.update();
-        // // id 12 : left shoulder
-        // dummyState[12] = dummyBone.modelMatrix;
-        // int min = 12;
-        // int max = 13;
-        // for (int i = min; i < max; i++)
-        //     dummyState[i] = dummyBone.modelMatrix;
-
-        // dummyState.applyAnimations(time, animations);
-
         // bad but whatver it's just a demo
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
             isJogging = true;
@@ -468,14 +439,8 @@ void Game::mainloop()
 
         controller.update(globals.appTime.getDelta());
         controller.applyKeyframes(dummyState);
-
-        // auto frames = idleAnim->getCurrentFrames(time);
-        // dummyState.applyKeyframes(frames);
-
-        humanSkeleton->applyGraph(dummyState);
-
+        dummyState.skeleton->applyGraph(dummyState);
         dummyState.update();
-        // dummyState.activate(2);
 
         /* UI & 2D Render */
         glEnable(GL_BLEND);
